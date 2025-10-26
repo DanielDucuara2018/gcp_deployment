@@ -38,7 +38,7 @@ variable "subnet_ip_cidr_range" {
 
 variable "instance_type" {
   description = "The instance type of the EC2 instances"
-  default     = "e2-medium"
+  default     = "n2d-standard-2"
   type        = string
 }
 

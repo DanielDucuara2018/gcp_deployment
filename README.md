@@ -1,130 +1,82 @@
-# ☁️ GCP Deployment with Terraform
+# GCP Deployment with Terraform
 
-This project provisions a basic **Google Cloud Platform (GCP)** infrastructure using **Terraform**. It includes:
+Terraform configuration to provision a basic GCP infrastructure with a VM instance running Docker and Python 3.12.
 
-* **Virtual Private Cloud (VPC):** A custom-mode VPC with a specified IP range.
-* **Subnet:** A subnet deployed in a specified GCP region.
-* **Firewall Rule:** A firewall rule allowing inbound SSH (port 22) access.
-* **Compute Engine Virtual Machine (VM):** A VM instance deployed within the subnet, assigned an external IP address for public access.
-* **Cloud NAT Configuration:** A Cloud NAT setup to enable the VM to access external internet resources securely without exposing additional ports.
-* **Startup Script:** An optional startup script (`init.sh`) to initialize the VM on boot.
+## What's Provisioned
 
-This setup provides a foundational infrastructure layer suitable for development or testing environments in GCP, emphasizing secure access and internet connectivity through SSH and NAT configurations.
+- **VPC Network**: Custom network with subnet (10.0.1.0/24)
+- **VM Instance**: Ubuntu 22.04 VM (n2d-standard-2) with external IP
+- **Cloud NAT**: For secure outbound internet access
+- **Firewall**: SSH access on port 22
+- **Startup Script**: Installs Docker, Git, and Python 3.12
 
----
+## Prerequisites
 
-## 📁 Project Structure
+- GCP account with billing enabled
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed
+- [Terraform](https://www.terraform.io/downloads.html) installed
+- GCP service account key (place in `resources/gcp-key.json`)
 
-```bash
-gcp_deployment/
-├── resources/             # Directory for additional resources (e.g., scripts, images)
-├── firewall.tf            # Defines firewall rules
-├── output.tf              # Specifies output variables
-├── provider.tf            # Configures the GCP provider
-├── variables.tf           # Declares input variables
-├── vms.tf                 # Configures Compute Engine VM instances
-├── vpc.tf                 # Sets up the Virtual Private Cloud network
-└── README.md              # Project documentation
-```
+## Quick Start
 
----
-
-## 🚀 Features
-
-* **Infrastructure as Code (IaC):** Utilize Terraform to define and manage GCP resources declaratively.
-* **Modular Configuration:** Organized `.tf` files for clear separation of concerns and easier maintenance.
-* **Scalable Deployments:** Easily adapt configurations for different environments and scales.
-* **Automated Provisioning:** Streamline the creation and management of infrastructure components.
-
----
-
-## 🛠️ Getting Started
-
-### Prerequisites
-
-* A Google Cloud Platform account with billing enabled.
-* [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and configured.
-* [Terraform](https://www.terraform.io/downloads.html) installed.
-* Enable necessary GCP APIs, such as Compute Engine API.([YouTube][1], [Google Cloud][2])
-
-### Deployment Steps
-
-1. **Clone the Repository:**
-
-   ```bash
-   git clone https://github.com/DanielDucuara2018/gcp_deployment.git
-   cd gcp_deployment
-   ```
-   
-2. **Create SSH keys**
+1. **Generate SSH keys** (if you don't have them):
 
    ```bash
    ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
    ```
 
-3. **Initialize Terraform:**
+2. **Configure variables** in `terraform.tfvars`:
 
-   ```bash
-   terraform init
+   ```hcl
+   project_id       = "your-gcp-project-id"
+   region           = "europe-west4"
+   zone             = "europe-west4-a"
+   ssh_user         = "ubuntu"
+   public_key_path  = "~/.ssh/id_rsa.pub"
+   credential_file  = "resources/gcp-key.json"
    ```
 
-4. **Format the Configuration Files (Optional but Recommended):**
+3. **Deploy infrastructure**:
 
    ```bash
-   terraform fmt
+   terraform init       # Initialize Terraform and download providers
+   terraform fmt        # Format configuration files
+   terraform validate   # Validate configuration syntax
+   terraform plan       # Preview changes before applying
+   terraform apply      # Create infrastructure
    ```
 
-5. **Validate the Configuration:**
+4. **Connect to VM**:
 
    ```bash
-   terraform validate
+   ssh -i ~/.ssh/id_rsa ubuntu@<instance_ip>
    ```
 
-6. **Review the Execution Plan:**
-
-   ```bash
-   terraform plan
-   ```
-
-7. **Apply the Configuration:**
-
-   ```bash
-   terraform apply
-   ```
-
-   *To apply without a prompt:*
-   
-   ```bash
-   terraform apply -auto-approve
-   ```
-
-8. **SSH Connection**
-
-   ```bash
-   ssh -i ~/.ssh/id_rsa ubuntu@<external-ip>
-   ```
-
-9. **(Optional) Destroy the Infrastructure:**
-
+5. **Destroy infrastructure** (when done):
    ```bash
    terraform destroy
    ```
----
 
-## 📌 Notes
+## Project Structure
 
-* Ensure that the `provider.tf` file is correctly configured with your GCP project ID and desired region.
-* Customize the `variables.tf` file to define values specific to your deployment needs.
-* Review and adjust the configurations in the `.tf` files to match your infrastructure requirements.
+```
+gcp_deployment/
+├── provider.tf          # GCP provider configuration
+├── variables.tf         # Input variables
+├── vpc.tf              # VPC, subnet, NAT configuration
+├── firewall.tf         # Firewall rules
+├── vms.tf              # VM instance configuration
+├── output.tf           # Output values (instance IP)
+├── terraform.tfvars    # Variable values (not in git)
+└── resources/
+    ├── gcp-key.json    # Service account key (not in git)
+    └── init.sh         # VM startup script
+```
 
----
+## Outputs
 
-## 🤝 Contributing
+After deployment, Terraform outputs the VM's external IP address:
 
-Contributions are welcome! Feel free to fork the repository and submit a pull request for any enhancements or bug fixes.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
+```bash
+terraform output instance_ip
+```
