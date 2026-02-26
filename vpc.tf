@@ -3,6 +3,11 @@ resource "google_compute_network" "vpc_network" {
   auto_create_subnetworks = false
 }
 
+resource "google_compute_address" "static_ip" {
+  name   = "vm-static-ip"
+  region = var.region
+}
+
 resource "google_compute_subnetwork" "public_subnet" {
   name          = "public-subnet"
   ip_cidr_range = var.subnet_ip_cidr_range
